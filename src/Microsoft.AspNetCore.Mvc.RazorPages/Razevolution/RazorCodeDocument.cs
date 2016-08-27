@@ -12,7 +12,7 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Razevolution
         public abstract ItemCollection Items { get; }
 
         public abstract RazorSourceDocument Source { get; }
-        
+
         public abstract class ItemCollection
         {
             public abstract object this[object key] { get; set; }

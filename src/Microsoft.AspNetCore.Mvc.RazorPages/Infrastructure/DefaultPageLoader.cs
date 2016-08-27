@@ -7,16 +7,17 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using Microsoft.AspNetCore.Mvc.RazorPages.Compilation.Rewriters;
 using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
-using Microsoft.AspNetCore.Mvc.RazorPages.Internal;
 using Microsoft.AspNetCore.Mvc.RazorPages.Razevolution;
+using Microsoft.AspNetCore.Mvc.RazorPages.Razevolution.CSharpRendering;
+using Microsoft.AspNetCore.Mvc.RazorPages.Razevolution.IR;
 using Microsoft.AspNetCore.Razor.Compilation.TagHelpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Options;
@@ -46,18 +47,44 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Compilation
 
             _tagHelperDescriptorResolver = tagHelperDescriptorResolver;
 
+            // TODO: Code smell, this is newed up in several locations. We should find a unified location for this.
+            var attributeContext = new GeneratedTagHelperAttributeContext()
+            {
+                CreateModelExpressionMethodName = "CreateModelExpression",
+                ModelExpressionProviderPropertyName = "ModelExpressionProvider",
+                ModelExpressionTypeName = "Microsoft.AspNetCore.Mvc.ViewFeatures.ModelExpression",
+                ViewDataPropertyName = "ViewData",
+            };
+
             _engine = RazorEngineBuilder.Build(builder =>
             {
                 builder.Features.Add(new TagHelperFeature(_host.TagHelperDescriptorResolver));
                 builder.Features.Add(new VirtualDocumentSyntaxTreePass());
                 builder.Features.Add(new TagHelperBinderSyntaxTreePass());
+
+                builder.Features.Add(new InstrumentationPass(_host));
+                builder.Features.Add(new PreallocatedTagHelperAttributePass());
+
+                // MVC specific features
+                builder.Features.Add(new ModelExpressionAttributePass(attributeContext));
+                builder.Features.Add(new InjectDirectiveRenderer(typeof(RazorInjectAttribute).FullName));
+
                 builder.Features.Add(new DefaultChunkTreeLoweringFeature(_host));
+                builder.Features.Add(new DefaultCSharpSourceLoweringFeature(_host));
+                builder.Features.Add(new DefaultRuntimeCSharpRenderer());
 
                 builder.Features.Add(new PageDirectiveFeature()); // RazorPages-specific feature
+                builder.Features.Add(new PagesPropertyInjectionPass());
 
                 builder.Phases.Add(new DefaultSyntaxTreePhase());
                 builder.Phases.Add(new DefaultChunkTreePhase());
-                builder.Phases.Add(new DefaultCSharpSourceLoweringPhase(_host));
+
+                // New Razor generation phases.
+                builder.Phases.Add(new Razevolution.IR.DefaultCSharpSourceLoweringPhase());
+                builder.Phases.Add(new DefaultCSharpDocumentGenerationPhase(_host));
+
+                // Uncomment the below line to force old-style view rendering.
+                // builder.Phases.Add(new Razevolution.DefaultCSharpSourceLoweringPhase(_host));
             });
         }
 
@@ -90,7 +117,7 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Compilation
             }
 
             AddVirtualDocuments(document, relativePath);
-            
+
             var @namespace = GetNamespace(relativePath);
             var @class = "Generated_" + Path.GetFileNameWithoutExtension(Path.GetFileName(relativePath));
 

@@ -21,7 +21,7 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Compilation
 
         private HashSet<string> _pageUsings;
 
-        public PageCodeGenerator(CodeGeneratorContext context) 
+        public PageCodeGenerator(CodeGeneratorContext context)
             : base(context)
         {
         }
@@ -200,7 +200,7 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Compilation
             }
 
             public string ModelType { get; set; }
-            
+
             public override void Accept(Chunk chunk)
             {
                 if (chunk is ModelChunk)

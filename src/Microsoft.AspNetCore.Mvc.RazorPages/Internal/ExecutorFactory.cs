@@ -96,7 +96,7 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Internal
                 var unpackExpressions = new Expression[parameters.Length];
                 for (var i = 0; i < parameters.Length; i++)
                 {
-                    unpackExpressions[0] = Expression.Convert(Expression.ArrayIndex(arguments, Expression.Constant(i)), parameters[i].Type);
+                    unpackExpressions[i] = Expression.Convert(Expression.ArrayIndex(arguments, Expression.Constant(i)), parameters[i].Type);
                 }
 
                 return unpackExpressions;

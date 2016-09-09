@@ -15,12 +15,18 @@ namespace RazorPages.Samples.Web
         {
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase());
             services.AddDistributedMemoryCache();
+            services.AddAuthorization();
             services.AddSession();
             services
                 .AddMvcCore(options => options.Filters.Add(new HelloWorldFilter()))
+                .AddAuthorization()
                 .AddViews()
                 .AddRazorViewEngine()
-                .AddRazorPages();
+                .AddRazorPages(options => 
+                {
+                    //options.AuthorizeFolder("/", "default");
+                    options.AllowAnonymousToPage("/Index");
+                });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)

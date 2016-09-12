@@ -23,16 +23,13 @@ namespace Microsoft.AspNetCore.Mvc.RazorPages.Razevolution
 
             var errors = new List<RazorError>(syntaxTree.Diagnostics);
             var blockBuilder = new BlockBuilder(syntaxTree.Root);
-            
+
             for (var i = 0; i < trees.Count; i++)
             {
                 var tree = trees[i];
 
-                foreach (var node in tree.Root.Children)
-                {
-                    blockBuilder.Children.Insert(i, tree.Root);
-                }
-                
+                blockBuilder.Children.Insert(i, tree.Root);
+
                 errors.AddRange(tree.Diagnostics);
                 foreach (var error in tree.Diagnostics)
                 {

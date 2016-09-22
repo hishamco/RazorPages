@@ -23,10 +23,24 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder;
         }
 
+        public static IPageModelConventionBuilder AuthorizePage(this IPageModelConventionBuilder builder, string path)
+        {
+            var filter = new ConstructableAuthorizationFilter(new AuthorizeAttribute());
+            builder.Add(new PageConvention(path, (m) => m.Filters.Add(filter)));
+            return builder;
+        }
+
         public static IPageModelConventionBuilder AuthorizePage(this IPageModelConventionBuilder builder, string path, string policy)
         {
             var filter = new ConstructableAuthorizationFilter(new AuthorizeAttribute(policy));
             builder.Add(new PageConvention(path, (m) => m.Filters.Add(filter)));
+            return builder;
+        }
+
+        public static IPageModelConventionBuilder AuthorizeFolder(this IPageModelConventionBuilder builder, string path)
+        {
+            var filter = new ConstructableAuthorizationFilter(new AuthorizeAttribute());
+            builder.Add(new FolderConvention(path, (m) => m.Filters.Add(filter)));
             return builder;
         }
 

@@ -1,0 +1,17 @@
+﻿@* @page *@
+
+@functions {
+    public void OnGet()
+    {
+        Username = Context.User.Identity.Name;
+    }
+
+    public string Username { get; set; }
+}
+
+@{
+    Layout = "~/Pages/_Layout.cshtml";
+    ViewBag.Title = "Secure Page";
+}
+
+Welcome, <b>@Username</b>

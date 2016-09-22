@@ -15,6 +15,7 @@ namespace RazorPages.Samples.Web
         {
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase());
             services.AddDistributedMemoryCache();
+            services.AddAuthentication();
             services.AddAuthorization();
             services.AddSession();
             services
@@ -25,6 +26,7 @@ namespace RazorPages.Samples.Web
                 .AddRazorPages(options => 
                 {
                     //options.AuthorizeFolder("/", "default");
+                    options.AuthorizePage("/Secure");
                     options.AllowAnonymousToPage("/Index");
                 });
         }
@@ -32,6 +34,12 @@ namespace RazorPages.Samples.Web
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(LogLevel.Debug);
+
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });
 
             app.UseStatusCodePages();
 
